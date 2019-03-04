@@ -1,6 +1,6 @@
-#DeepSTN+
+# DeepSTN+
 
-AAAI 2019 DeepSTN+: Context-aware Spatial-Temporal Neural Network for Crowd Flow Prediction in Metropolis
+Keras implementation AAAI 2019 DeepSTN+: Context-aware Spatial-Temporal Neural Network for Crowd Flow Prediction in Metropolis
 
 ForPrivate is for internal usage. DeepSTN is for public usage.
 
