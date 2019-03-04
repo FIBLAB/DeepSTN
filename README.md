@@ -2,8 +2,6 @@
 
 Keras implementation AAAI 2019 DeepSTN+: Context-aware Spatial-Temporal Neural Network for Crowd Flow Prediction in Metropolis
 
-ForPrivate is for internal usage. DeepSTN is for public usage.
-
 # Datasets
 
 Similar to [ST-ResNet](https://github.com/lucktroy/DeepST), our dataset is from the [NYC Bike](https://www.citibikenyc.com/system-data). Besides, we collect 9 types of PoIs for this dataset. The spatial map size of the dataset is 21x12. The dataset is in the folder /DATA/dataBikeNYC flow_data.npy ( TimeLenth x In&OutFlow x MapHeight x MapWidth = 4392 x 2 x 21 x 12 ) and poi_data.npy ( PoICategories x MapHeight x MapWidth = 9 x 21 x 12 ) for directly used.
