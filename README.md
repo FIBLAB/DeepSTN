@@ -1,6 +1,14 @@
 # DeepSTN+
 
-Keras implementation AAAI 2019 DeepSTN+: Context-aware Spatial-Temporal Neural Network for Crowd Flow Prediction in Metropolis
+Keras implementation of ***DeepSTN+: Context-aware Spatial-Temporal Neural Network for Crowd Flow Prediction in Metropolis. Ziqian Lin^, Jie Feng^, Ziyang Lu, Yong Li, and Depeng Jin. AAAI 2019.*** (^ indicates equal contribution) If our codes is helpful to your research, you can cite our work by:
+```latex
+@article{lin2019deepstn+:,
+title={DeepSTN+: Context-aware Spatial Temporal Neural Network for Crowd Flow Prediction in Metropolis},
+author={Lin, Ziqian and Feng, Jie and Lu, Ziyang and Li, Yong and Jin, Depeng},
+booktitle={Thirty-Thrid AAAI Conference on Artificial Intelligence},
+year={2019}
+}
+```
 
 # Datasets
 
