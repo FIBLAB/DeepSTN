@@ -3,8 +3,8 @@ K.set_image_data_format('channels_first')
 import numpy as np
 
 from keras.optimizers import Adam
-from keras.layers import Input,Activation,Dropout,BatchNormalization,AveragePooling2D,Multiply
-from keras.layers import Lambda,Reshape,Concatenate,Add
+from keras.layers import Input,Activation,Dropout,BatchNormalization,AveragePooling2D,ZeroPadding2D,Multiply
+from keras.layers import Lambda,Reshape,Concatenate,Add,Permute,TimeDistributed
 from keras.models import Model
 from keras.layers.convolutional import Conv2D
 import PPT3_network.metrics as metrics
@@ -32,6 +32,40 @@ def conv_unit1(Fin,Fout,drop,H,W):
     unit_model=Model(inputs=unit_input,outputs=unit_output)
     print('kernel=(1,1)')
     return unit_model
+
+# efficient version of Res_plus
+def Res_plus_E(name,F,Fplus,rate,drop,H,W):
+    cl_input=Input(shape=(F,H,W))
+
+    #normal channels
+    cl_conv1A=conv_unit0(F,F-Fplus,drop,H,W)(cl_input)
+
+    #separated channels
+    if rate == 1:
+        cl_conv1B=cl_input
+    if rate !=1:
+        cl_conv1B=AveragePooling2D(pool_size=(rate,rate),strides=(rate,rate),padding="valid")(cl_input)
+
+    HR,WR=int(np.floor(H/rate)),int(np.floor(W/rate))
+    cl_conv1B=Activation('relu')(cl_conv1B)
+    cl_conv1B=BatchNormalization()(cl_conv1B)
+
+    cl_conv1B=Conv2D(filters=Fplus,kernel_size=(1,1),use_bias=False,padding="same")(cl_conv1B)
+    cl_conv1B=Reshape((Fplus,1,HR,WR),input_shape=(Fplus,HR,WR))(cl_conv1B)
+    attention=Conv2D(filters=H*W,kernel_size=(HR,WR),use_bias=False,W_constraint=nonneg(),padding="valid")
+    cl_conv1B=TimeDistributed(attention)(cl_conv1B)
+    cl_conv1B=Reshape((Fplus,H,W),input_shape=(Fplus,H*W,1,1))(cl_conv1B)
+
+    #merge
+    cl_conv1=Concatenate(axis=1)([cl_conv1A,cl_conv1B])
+
+    cl_conv2=conv_unit0(F,F,drop,H,W)(cl_conv1)
+
+    cl_out=Add()([cl_input,cl_conv2])
+
+    cl_model=Model(inputs=cl_input,outputs=cl_out,name=name)
+
+    return cl_model
 
 # new resdual block
 def Res_plus(name,F,Fplus,rate,drop,H,W):
@@ -180,6 +214,7 @@ def DeepSTN(H=21,W=12,channel=2,      #H-map_height W-map_width channel-map_chan
             c=3,p=4,t=4,              #c-closeness p-period t-trend
             pre_F=64,conv_F=64,R_N=2, #pre_F-prepare_conv_featrue conv_F-resnet_conv_featrue R_N-resnet_number
             is_plus=True,             #use ResPlus or mornal convolution
+            is_plus_efficient=False,  #use the efficient version of ResPlus
             plus=8,rate=2,            #rate-pooling_rate
             is_pt=True,               #use PoI and Time or not
             P_N=6,T_F=28,PT_F=6,T=24, #P_N-poi_number T_F-time_feature PT_F-poi_time_feature T-T_times/day 
@@ -229,8 +264,12 @@ def DeepSTN(H=21,W=12,channel=2,      #H-map_height W-map_width channel-map_chan
             cpt=conv_unit0(pre_F*3,conv_F,drop,H,W)(cpt_con1)  
      
     if is_plus:
-        for i in range(R_N):
-            cpt=Res_plus('Res_plus_'+str(i+1),conv_F,plus,rate,drop,H,W)(cpt)
+        if is_plus_efficient:
+            for i in range(R_N):
+                cpt=Res_plus_E('Res_plus_'+str(i+1),conv_F,plus,rate,drop,H,W)(cpt)
+        else:
+            for i in range(R_N):
+                cpt=Res_plus('Res_plus_'+str(i+1),conv_F,plus,rate,drop,H,W)(cpt)
 
     else:  
         for i in range(R_N):
